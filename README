@@ -10,7 +10,62 @@ Copyright (C) 2009 Mateo Matachana <mat30.mail gmail.com>
 
 This version supports plugins and can watch other logs, not just ssh logs.
 
+
+- HOW TO INSTALL:
+
+The first you need to do is configure the script. In order to do that, open
+your favorite editor and edit the banfromlog.sh script. Also edit the 
+plugins/log2db/invaliduser if you have your ssh logs in a non standard folder,
+plugins/notify/mail in order to set your email and plugins/show/invaliduser
+(if you have your ssh logs in a non standard folder). You should modify all
+the variables at the top of the script. All are documented and with example
+values.
+
+When you are done, remove or comment the following lines:
+
+70    # Remove or comment this two lines AFTER CONFIGURING this script
+71    echo "Configure me first!. Edit me and remove this comment to use me"
+72    exit 0;
+73    #************************************************
+
+After that, you need to create the database structure. You should do this step
+each time you install a new plugin. Execute bfl with the following argument:
+
+ ...@....:~/ $  banfromlog install-db
+ 
+Now banfromlog is ready to run. Each time you execute banfromlog log2db, all 
+the nasty things done to your computer will be logged in the database. When
+you execute banfromlog protect, bfl will ban in iptables all the attacking
+ips. If you execute banfromlog show you can see all the logged attacks.
+
+In order to have a full protection all the time, you can add this entries
+to the root crontab. Edit with your favorite editor the /etc/crontab file
+and add:
+
+	50 *    * * *   root    /root/banfromlog log2db
+	55 *    * * *   root    /root/banfromlog protect
+
+Where /root/banfromlog is the path to the banfromlog script and 55 * is each hour at 55 minutes
+
+I have configured it to run each 10 minutes and works fine
+
+WARNING!!: If you have accepted traffic to 22 port in a previous line of your iptables rules, you must 
+be careful and correct this by hand (for example, delete all rules and execute them from the beginnig).
+It depends on the configuration that you have. More information at: http://netfilter.org
+
+WARNING2: BANFROMLOG WILL ALWAYS ADD ALL IPS TO IPTABLES, so, its recommended that you regenerate your firewall
+with banfromlog in the middle. This is not a bug, it's a feature xD
+
+
+
+
+
 ********************************************************************************
+* ORIGINAL README FILE WRITTEN BY JOSE SANCHEZ                                 *
+********************************************************************************
+
+
+
 
  banfromlog: examines logs to prevent ssh brute force attacks
     and forbids ips with many attempts to connect to your host at 22 port.

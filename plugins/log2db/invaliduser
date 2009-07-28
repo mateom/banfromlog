@@ -1,0 +1,69 @@
+#!/bin/bash
+
+#
+# banfromlog: examines logs to prevent attacks and forbids ips who tries to do
+#             nasty things.
+# invaliduser: This plugin checks and block the attemps to login with an invalid
+#              user
+# Copyright (C) 2005 Jose Sanchez (Original version) <jose_at_serhost_dot_com>
+# Copytight (C) 2009 Mateo Matachana (Current version) <mat30.mail gmail.com>
+
+# Specials thanks to: Julio Mendoza
+# julio_dot_mendoza_at_eemsystems_dot_com  - http://eemsystems.com/
+# who suggest the sqlite compatibility and programmed almost all sqlite compatibility
+
+# This script was based on another one from: http://tuxworld.homelinux.org
+# In this version you hardly can find a line from them.
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+
+LOGFILE="/var/log/auth.log"
+
+. "$LIBDIR/database.api"
+
+if [ "$1" == "install-db" ]; then
+echo "Creating DB..."
+bfl_db_execute_query "CREATE TABLE IF NOT EXISTS blacklist (ip varchar(50) NOT NULL unique,comment varchar(250));";
+bfl_db_execute_query "CREATE TABLE IF NOT EXISTS invalid_report (ip varchar(50) NOT NULL unique);";
+exit 0;
+fi
+
+
+db_exist=`bfl_db_execute_query "SELECT ip FROM blacklist "`;
+
+echo
+echo "Logging..."
+echo
+o=0
+
+datum=`date`
+
+bfl_db_execute_query "DELETE FROM invalid_report"
+
+for i in `cat $LOGFILE|grep Invalid|awk '{print $10}'|sort -n|uniq`
+do
+		search=`echo $db_exist | grep "$i" |  awk 'BEGIN{ FS=" " }; { print $1 }' `;
+		if [ ! $search ]; then
+			bfl_db_execute_query "INSERT INTO blacklist ( ip, comment ) VALUES ( '$i', 'ssh_invalid_user, $datum ')";
+			bfl_db_execute_query "INSERT INTO invalid_report VALUES('$i')";
+		fi
+		db_exist="$db_exist $i";
+		echo "Logging: $i"
+		((o=o+1))
+done
+
+echo "Finished. Added $o new ip(s) to the firewall"
+echo
+

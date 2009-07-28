@@ -1,0 +1,87 @@
+This is the original banfromlog README file. This version is developed by 
+Mateo Matachana López. You can find the original version at 
+http://serhost.com/banfromlog/. This version is not related in any way with the 
+original version.
+
+ bfl: examines logs to prevent attacks and forbids ips who tries to do nasty 
+ things.
+
+Copyright (C) 2009 Mateo Matachana <mat30.mail gmail.com>
+
+This version supports plugins and can watch other logs, not just ssh logs.
+
+********************************************************************************
+
+ banfromlog: examines logs to prevent ssh brute force attacks
+    and forbids ips with many attempts to connect to your host at 22 port.
+
+Copyright (C) 2005 Jose Sanchez <jose_at_serhost_dot_com>
+
+INDEX
+---------------------------------------------------------------------------
+
+	WHAT IS BANFROMLOG
+	WHY IS IMPORTANT?
+	HOW TO INSTALL
+
+---------------------------------------------------------------------------
+
+
+WHAT IS BANFROMLOG
+==================
+
+	BanFromLog is a simple script to log any illegal user attempt of your 
+	SSHD daemon from the auth.log file.
+
+	It logs those nasty ips to a database (defined by you) and you can call
+	to do this automatically by typing a line at the crond.
+
+WHY IS IMPORTANT?
+=================
+
+	Well is truth that if you have only an user, you don't need this but, when 
+	you have hundreds or even thousands, users, many of them could have an insecure
+	password (even if you have warned them or have some special modification in the
+	passwd command to prevent this).
+
+	You can receive other kinds of attacks via SSH port from those IPS which first
+	attempted only a couple of illegal users. (illegal user: user that doesn't exists).
+
+	Your CPU can be slower with this kind of brute force attacks, even if you have put
+	a maximum attempts or whatever, because this kind of attacks are done with many "zoombies"
+
+HOW TO INSTALL
+==============
+
+	First you need MySQL or sqlite installed and root access
+
+	If you have MySQL allow one user to connect to localhost to a database without password,
+	then dit the banfromlog script and put that information: database used, username, host.
+	In the database, you need to create the structure defined on structure.mysql
+
+	Then edit banfromlog and remove this lines:
+
+		# Remove or comment this two lines AFTER CONFIGURING this script
+		echo "Configure me first!. Edit me and remove this comment to use me"
+		exit 0;
+		#************************************************
+
+	Call "banfromlog log2db" and "banfromlog protect" each hour with this line on the crontab:
+
+		First edit /etc/crontab
+			# nano /etc/crontab
+
+		Then add this lines
+			50 *    * * *   root    /root/banfromlog log2db
+			55 *    * * *   root    /root/banfromlog protect
+
+		Where /root/banfromlog is the path to the banfromlog script and 55 * is each hour at 55 minutes
+
+	I have configured it to run each 10 minutes and works fine
+
+	WARNING!!: If you have accepted traffic to 22 port in a previous line of your iptables rules, you must 
+	be careful and correct this by hand (for example, delete all rules and execute them from the beginnig).
+	It depends on the configuration that you have. More information at: http://netfilter.org
+
+	WARNING2: BANFROMLOG WILL ALWAYS ADD ALL IPS TO IPTABLES, so, its recommended that you regenerate your firewall
+	with banfromlog in the middle. This is not a bug, it's a feature xD

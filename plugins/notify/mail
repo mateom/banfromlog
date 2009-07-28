@@ -1,0 +1,44 @@
+#!/bin/bash
+
+#
+# banfromlog: examines logs to prevent attacks and forbids ips who tries to do
+#             nasty things.
+# mail: This plugin sends mail with a count of the attacks detected.
+# Copyright (C) 2005 Jose Sanchez (Original version) <jose_at_serhost_dot_com>
+# Copytight (C) 2009 Mateo Matachana (Current version) <mat30.mail gmail.com>
+
+# Specials thanks to: Julio Mendoza
+# julio_dot_mendoza_at_eemsystems_dot_com  - http://eemsystems.com/
+# who suggest the sqlite compatibility and programmed almost all sqlite compatibility
+
+# This script was based on another one from: http://tuxworld.homelinux.org
+# In this version you hardly can find a line from them.
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+
+. "$LIBDIR/database.api"
+
+if [ "$1" == "install-db" ]; then
+echo "Creating DB..."
+bfl_db_execute_query "CREATE TABLE IF NOT EXISTS invalid_report (ip varchar(50) NOT NULL unique);";
+exit 0;
+fi
+
+MAILADD="mail@example.com"
+SUBJECT="-- BFL -- Attacks detected"
+
+attacks_count=`bfl_db_execute_query "select count(ip) from invalid_report;"`;
+
+echo "Detected and solved $attacks_count attacks." | mail -s "$SUBJECT" $MAILADD

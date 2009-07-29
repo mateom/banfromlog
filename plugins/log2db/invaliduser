@@ -50,8 +50,6 @@ o=0
 
 datum=`date`
 
-bfl_db_execute_query "DELETE FROM invalid_report"
-
 for i in `cat $LOGFILE|grep Invalid|awk '{print $10}'|sort -n|uniq`
 do
 		search=`echo $db_exist | grep "$i" |  awk 'BEGIN{ FS=" " }; { print $1 }' `;

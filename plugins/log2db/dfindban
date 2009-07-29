@@ -3,16 +3,8 @@
 #
 # banfromlog: examines logs to prevent attacks and forbids ips who tries to do
 #             nasty things.
-# mail: This plugin sends mail with a count of the attacks detected.
-# Copyright (C) 2005 Jose Sanchez (Original version) <jose_at_serhost_dot_com>
-# Copytight (C) 2009 Mateo Matachana (Current version) <mat30.mail gmail.com>
-
-# Specials thanks to: Julio Mendoza
-# julio_dot_mendoza_at_eemsystems_dot_com  - http://eemsystems.com/
-# who suggest the sqlite compatibility and programmed almost all sqlite compatibility
-
-# This script was based on another one from: http://tuxworld.homelinux.org
-# In this version you hardly can find a line from them.
+# dfindban: bans the DFInd port scanner.
+# Copyright (C) 2009 Mateo Matachana (Current version) <mat30.mail gmail.com>
 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -28,22 +20,40 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+LOGFILE="/var/log/httpd/error_log"
+
 . "$LIBDIR/database.api"
 
 if [ "$1" == "install-db" ]; then
 echo "Creating DB..."
+bfl_db_execute_query "CREATE TABLE IF NOT EXISTS blacklist (ip varchar(50) NOT NULL unique,comment varchar(250));";
 bfl_db_execute_query "CREATE TABLE IF NOT EXISTS invalid_report (ip varchar(50) NOT NULL unique);";
 exit 0;
 fi
 
-MAILADD="mail@example.com"
-SUBJECT="-- BFL -- Attacks detected"
 
-attacks_count=`bfl_db_execute_query "select count(ip) from invalid_report;"`;
+db_exist=`bfl_db_execute_query "SELECT ip FROM blacklist "`;
 
-if [ "$attacks_count" != "0" ]; then
-	echo "Detected and solved $attacks_count attacks." | mail -s "$SUBJECT" $MAILADD
-    bfl_db_execute_query "DELETE FROM invalid_report"
-else
-	echo "Nothing to report"
-fi
+echo
+echo "Logging..."
+echo
+o=0
+
+datum=`date`
+
+for i in `cat $LOGFILE|grep "w00tw00t.at.ISC.SANS.DFind" | awk '{print $8}' | sed 's/]//' | sort -n | uniq`
+do
+		search=`echo $db_exist | grep "$i" |  awk 'BEGIN{ FS=" " }; { print $1 }' `;
+		if [ ! $search ]; then
+			bfl_db_execute_query "INSERT INTO blacklist ( ip, comment ) VALUES ( '$i', 'dfind, $datum ')";
+			bfl_db_execute_query "INSERT INTO invalid_report VALUES('$i')";
+			echo "Logging: $i"
+			((o=o+1))
+		fi
+		db_exist="$db_exist $i";
+		
+done
+
+echo "Finished. Added $o new ip(s) to the firewall"
+echo
+

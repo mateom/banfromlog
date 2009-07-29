@@ -41,4 +41,8 @@ SUBJECT="-- BFL -- Attacks detected"
 
 attacks_count=`bfl_db_execute_query "select count(ip) from invalid_report;"`;
 
-echo "Detected and solved $attacks_count attacks." | mail -s "$SUBJECT" $MAILADD
+if [ "$attacks_count" != "0" ]; then
+	echo "Detected and solved $attacks_count attacks." | mail -s "$SUBJECT" $MAILADD
+else
+	echo "Nothing to report"
+fi

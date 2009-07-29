@@ -58,10 +58,11 @@ do
 		if [ ! $search ]; then
 			bfl_db_execute_query "INSERT INTO blacklist ( ip, comment ) VALUES ( '$i', 'ssh_invalid_user, $datum ')";
 			bfl_db_execute_query "INSERT INTO invalid_report VALUES('$i')";
+			echo "Logging: $i"
+			((o=o+1))
 		fi
 		db_exist="$db_exist $i";
-		echo "Logging: $i"
-		((o=o+1))
+		
 done
 
 echo "Finished. Added $o new ip(s) to the firewall"

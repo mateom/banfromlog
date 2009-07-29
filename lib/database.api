@@ -33,10 +33,10 @@ function bfl_db_execute_query()
 {
     case "$DBTYPE" in
         sqlite)
-            echo "`$SQLITE3_BIN \"$SQL_DB_NAME\" \"$1\"`";
+            echo -n "`$SQLITE3_BIN \"$SQL_DB_NAME\" \"$1\"`";
             ;;
         mysql)
-            echo "`$MYSQL_BIN -D \"$SQL_DB_NAME\" -h $SQL_HOST -u $SQL_USER -p=$SQL_PASS -B -e -N \"$1\"`";
+            echo -n "`$MYSQL_BIN -D \"$SQL_DB_NAME\" -h $SQL_HOST -u $SQL_USER -p=$SQL_PASS -B -e -N \"$1\"`";
             ;;
     esac
 }
